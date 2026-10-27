@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nauka Liczb po Angielsku (0-100)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#6C5CE7',
+                            pink: '#FD79A8',
+                            yellow: '#FFEAA7',
+                            green: '#00B894',
+                            blue: '#0984E3',
+                            orange: '#E17055'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #312e81 50%, #4c1d95 100%);
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .pop-in {
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 min-h-screen">
+
+    <div class="w-full max-w-2xl glass-card rounded-3xl shadow-2xl p-6 md:p-8 text-gray-800 relative overflow-hidden my-auto">
+        
+        <!-- Pasek nagłówkowy ze statystykami -->
+        <div class="grid grid-cols-3 gap-2 mb-6 bg-indigo-50 p-4 rounded-2xl border-2 border-indigo-100 shadow-sm text-center">
+            <!-- Punkty -->
+            <div class="flex items-center justify-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-amber-400 flex items-center justify-center text-amber-900 shadow-sm">
+                    <i class="fa-solid fa-star text-base"></i>
+                </div>
+                <div class="text-left">
+                    <div class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Punkty</div>
+                    <div id="scoreDisplay" class="text-lg sm:text-xl font-extrabold text-indigo-900">0</div>
+                </div>
+            </div>
+
+            <!-- Seria (Streak) -->
+            <div class="flex items-center justify-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-fire text-base"></i>
+                </div>
+                <div class="text-left">
+                    <div class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Seria</div>
+                    <div id="streakDisplay" class="text-lg sm:text-xl font-extrabold text-orange-600">0</div>
+                </div>
+            </div>
+
+            <!-- Postęp opanowania -->
+            <div class="flex items-center justify-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm">
+                    <i class="fa-solid fa-check-double text-base"></i>
+                </div>
+                <div class="text-left">
+                    <div class="text-[10px] sm:text-xs text-gray-500 font-bold uppercase">Opanowane</div>
+                    <div id="masteredDisplay" class="text-lg sm:text-xl font-extrabold text-emerald-600">0 / 0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wybór zakresu -->
+        <div class="mb-6">
+            <label class="block text-sm font-bold text-gray-600 mb-2 text-center">Wybierz zakres liczb:</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 max-w-lg mx-auto">
+                <button onclick="setRangeMode('0-20')" id="btn-0-20" class="range-btn py-2.5 px-3 rounded-xl font-bold transition border-2 border-indigo-300 bg-indigo-600 text-white shadow-md text-sm">
+                    0 - 20 (21 liczb)
+                </button>
+                <button onclick="setRangeMode('21-100-simplified')" id="btn-21-100-simplified" class="range-btn py-2.5 px-3 rounded-xl font-bold transition border-2 border-indigo-200 bg-white text-indigo-800 hover:bg-indigo-50 text-sm">
+                    21 - 100 (25 liczb)
+                </button>
+                <button onclick="setRangeMode('0-100-full')" id="btn-0-100-full" class="range-btn py-2.5 px-3 rounded-xl font-bold transition border-2 border-indigo-200 bg-white text-indigo-800 hover:bg-indigo-50 text-sm">
+                    0 - 100 (Wszystkie)
+                </button>
+            </div>
+        </div>
+
+        <!-- Widok Zakończenia Zakresu (Gratulacje) -->
+        <div id="completionScreen" class="hidden text-center py-10 space-y-6 pop-in">
+            <div class="text-6xl">🏆</div>
+            <h2 class="text-3xl font-black text-indigo-900">Gratulacje!</h2>
+            <p class="text-gray-600 font-semibold max-w-md mx-auto text-lg">
+                Opanowałeś wszystkie liczby w tym zakresie! Każda z nich została poprawnie wpisana dwukrotnie.
+            </p>
+            <div class="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="resetCurrentRange()" class="py-3 px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg transition active:scale-95">
+                    <i class="fa-solid fa-rotate-right mr-2"></i>Zagraj ponownie ten zakres
+                </button>
+                <button onclick="setRangeMode('0-100-full')" class="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg transition active:scale-95">
+                    Wszystkie (0 - 100)
+                </button>
+            </div>
+        </div>
+
+        <!-- Główny obszar gry -->
+        <div id="gameScreen">
+            <div class="text-center my-6 relative">
+                <div class="inline-block relative">
+                    <!-- Główna cyfra do zgadnięcia -->
+                    <div id="numberDisplay" class="text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 drop-shadow-md py-2 px-6">
+                        ?
+                    </div>
+                    <!-- Przycisk odsłuchu wymowy -->
+                    <button onclick="speakCurrentNumber()" title="Odsłuchaj wymowę" class="absolute -right-12 top-1/2 -translate-y-1/2 w-10 h-10 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 rounded-full flex items-center justify-center transition shadow-md active:scale-95">
+                        <i class="fa-solid fa-volume-high text-lg"></i>
+                    </button>
+                </div>
+
+                <div id="badgeContainer" class="mt-1 h-5 text-xs font-semibold">
+                    <span id="progressBadge" class="px-2 py-0.5 rounded-full"></span>
+                </div>
+            </div>
+
+            <!-- Pole wprowadzania i przyciski -->
+            <form onsubmit="checkAnswer(event)" class="space-y-4 max-w-md mx-auto">
+                <div class="relative">
+                    <input type="text" id="answerInput" autocomplete="off" placeholder="Wpisz po angielsku..." 
+                        class="w-full text-center text-2xl font-bold py-4 px-6 rounded-2xl border-4 border-indigo-200 focus:border-indigo-500 focus:outline-none shadow-inner transition bg-white text-gray-800 placeholder-gray-300">
+                </div>
+
+                <!-- Komunikat ze zwrotną informacją -->
+                <div id="feedbackMessage" class="min-h-[56px] flex items-center justify-center rounded-2xl p-3 font-bold text-center text-lg hidden">
+                    <!-- Treść wiadomości -->
+                </div>
+
+                <div>
+                    <!-- Przycisk Sprawdź / Następna -->
+                    <button type="submit" id="submitBtn" class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xl rounded-2xl transition shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2">
+                        Sprawdź (Enter) <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Dolny panel statystyk sesji -->
+        <div class="mt-8 pt-4 border-t border-gray-200 flex justify-around text-center text-sm text-gray-500 font-medium">
+            <div>Dobre: <span id="correctCount" class="font-bold text-emerald-600">0</span></div>
+            <div>Złe: <span id="wrongCount" class="font-bold text-rose-500">0</span></div>
+            <div>Razem: <span id="totalCount" class="font-bold text-gray-700">0</span></div>
+        </div>
+    </div>
+
+    <script>
+        // Słownik podstawowych liczb angielskich
+        const numberWords = {
+            0: "zero", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five",
+            6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten",
+            11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
+            16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty",
+            30: "thirty", 40: "forty", 50: "fifty", 60: "sixty", 70: "seventy",
+            80: "eighty", 90: "ninety", 100: "one hundred"
+        };
+
+        function getEnglishWord(num) {
+            if (numberWords[num] !== undefined) return numberWords[num];
+            const tens = Math.floor(num / 10) * 10;
+            const units = num % 10;
+            return `${numberWords[tens]}-${numberWords[units]}`;
+        }
+
+        // Pomocnicza funkcja do losowania unikalnych liczb z przedziału
+        function getRandomSubset(start, end, count) {
+            const arr = [];
+            for (let i = start; i <= end; i++) arr.push(i);
+            // Fisher-Yates shuffle
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr.slice(0, count);
+        }
+
+        // Stan statystyk dla wszystkich możliwych liczb
+        // weight: waga losowania, correctCount: trafienia
+        const numberStats = {};
+        for (let i = 0; i <= 100; i++) {
+            numberStats[i] = {
+                weight: 1.0,
+                correctCount: 0
+            };
+        }
+
+        let currentMode = '0-20';
+        let currentRangeNumbers = []; // Tablica aktywnych liczb w danym trybie
+        let currentNumber = -1;
+        let currentWord = "";
+        let score = 0;
+        let streak = 0;
+        let totalCorrect = 0;
+        let totalWrong = 0;
+        let isWaitingForNext = false;
+
+        // Elementy DOM
+        const gameScreen = document.getElementById('gameScreen');
+        const completionScreen = document.getElementById('completionScreen');
+        const numberDisplay = document.getElementById('numberDisplay');
+        const answerInput = document.getElementById('answerInput');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const streakDisplay = document.getElementById('streakDisplay');
+        const masteredDisplay = document.getElementById('masteredDisplay');
+        const correctCountDisplay = document.getElementById('correctCount');
+        const wrongCountDisplay = document.getElementById('wrongCount');
+        const totalCountDisplay = document.getElementById('totalCount');
+        const progressBadge = document.getElementById('progressBadge');
+
+        // Generowanie zbioru liczb w zależności od trybu
+        function generateRangeNumbers(mode) {
+            let result = [];
+            if (mode === '0-20') {
+                for (let i = 0; i <= 20; i++) result.push(i);
+            } else if (mode === '21-100-simplified') {
+                // Dla każdej dziesiątki (20-29, 30-39, ..., 90-99) losujemy dokładnie 3 liczby
+                for (let decade = 20; decade <= 90; decade += 10) {
+                    const chosen = getRandomSubset(decade, decade + 9, 3);
+                    result.push(...chosen);
+                }
+                result.push(100); // Łącznie: 8 * 3 + 1 = 25 liczb
+            } else if (mode === '0-100-full') {
+                for (let i = 0; i <= 100; i++) result.push(i);
+            }
+            return result.sort((a, b) => a - b);
+        }
+
+        // Ustawienie wybranego trybu
+        function setRangeMode(mode) {
+            currentMode = mode;
+            currentRangeNumbers = generateRangeNumbers(mode);
+
+            // Reset wag i opanowania dla wybranych liczb w nowym zestawie
+            currentRangeNumbers.forEach(n => {
+                numberStats[n].weight = 1.0;
+                numberStats[n].correctCount = 0;
+            });
+
+            // Stylizacja przycisków
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+                btn.classList.add('bg-white', 'text-indigo-800');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${mode}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('bg-white', 'text-indigo-800');
+            }
+
+            gameScreen.classList.remove('hidden');
+            completionScreen.classList.add('hidden');
+
+            nextQuestion();
+        }
+
+        // Resetowanie obecnego zakresu
+        function resetCurrentRange() {
+            setRangeMode(currentMode);
+        }
+
+        // Pobranie statystyk dla aktualnego zakresu
+        function getRangeStats() {
+            let active = [];
+            let masteredCount = 0;
+            let totalInRange = currentRangeNumbers.length;
+
+            currentRangeNumbers.forEach(i => {
+                if (numberStats[i].correctCount >= 2) {
+                    masteredCount++;
+                } else {
+                    active.push(i);
+                }
+            });
+            return { active, masteredCount, totalInRange };
+        }
+
+        // Losowanie ważone z aktywnych liczb
+        function getWeightedRandomNumber(activeNumbers) {
+            if (activeNumbers.length === 0) return null;
+
+            let candidates = activeNumbers;
+            if (activeNumbers.length > 1 && currentNumber !== -1) {
+                candidates = activeNumbers.filter(n => n !== currentNumber);
+            }
+
+            let totalWeight = 0;
+            candidates.forEach(n => totalWeight += numberStats[n].weight);
+
+            let random = Math.random() * totalWeight;
+            for (let num of candidates) {
+                if (random < numberStats[num].weight) {
+                    return num;
+                }
+                random -= numberStats[num].weight;
+            }
+
+            return candidates[0];
+        }
+
+        // Pobranie kolejnego pytania
+        function nextQuestion() {
+            const { active, masteredCount, totalInRange } = getRangeStats();
+
+            masteredDisplay.textContent = `${masteredCount} / ${totalInRange}`;
+
+            // Jeśli wszystkie liczby w zaktualizowanym zakresie zostały opanowane
+            if (active.length === 0) {
+                gameScreen.classList.add('hidden');
+                completionScreen.classList.remove('hidden');
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 } });
+                return;
+            }
+
+            isWaitingForNext = false;
+            answerInput.value = "";
+            answerInput.disabled = false;
+            answerInput.focus();
+
+            feedbackMessage.classList.add('hidden');
+            feedbackMessage.className = "min-h-[56px] flex items-center justify-center rounded-2xl p-3 font-bold text-center text-lg hidden";
+
+            submitBtn.innerHTML = 'Sprawdź (Enter) <i class="fa-solid fa-arrow-right"></i>';
+            submitBtn.className = 'w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xl rounded-2xl transition shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2';
+
+            currentNumber = getWeightedRandomNumber(active);
+            currentWord = getEnglishWord(currentNumber);
+
+            // Odznaka statusu opanowania liczby
+            const count = numberStats[currentNumber].correctCount;
+            if (count === 1) {
+                progressBadge.textContent = "★ Jeszcze 1 trafna odpowiedź do opanowania!";
+                progressBadge.className = "px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-bold text-xs inline-block";
+            } else {
+                progressBadge.textContent = "";
+                progressBadge.className = "";
+            }
+
+            numberDisplay.textContent = currentNumber;
+            numberDisplay.classList.remove('pop-in');
+            void numberDisplay.offsetWidth;
+            numberDisplay.classList.add('pop-in');
+        }
+
+        function normalizeText(text) {
+            return text
+                .trim()
+                .toLowerCase()
+                .replace(/-/g, ' ')
+                .replace(/\s+/g, ' ');
+        }
+
+        function checkAnswer(e) {
+            e.preventDefault();
+
+            if (isWaitingForNext) {
+                nextQuestion();
+                return;
+            }
+
+            const userAnswer = answerInput.value;
+            if (!userAnswer.trim()) return;
+
+            const normalizedUser = normalizeText(userAnswer);
+            const normalizedCorrect = normalizeText(currentWord);
+
+            isWaitingForNext = true;
+            answerInput.disabled = true;
+
+            // Obliczenie średniej wagi wśród aktywnych liczb
+            let totalWeight = 0;
+            currentRangeNumbers.forEach(n => totalWeight += numberStats[n].weight);
+            let avgWeight = totalWeight / currentRangeNumbers.length;
+
+            if (normalizedUser === normalizedCorrect) {
+                // DOBRA ODPOWIEDŹ
+                numberStats[currentNumber].correctCount += 1;
+                
+                // Waga staje się 10 razy mniejsza względem średniej
+                numberStats[currentNumber].weight = Math.max(0.05, avgWeight / 10);
+
+                score += 10 + (streak * 2);
+                streak++;
+                totalCorrect++;
+
+                const isMasteredNow = numberStats[currentNumber].correctCount >= 2;
+
+                if (isMasteredNow) {
+                    feedbackMessage.innerHTML = `Dobrze! 🌟 Liczba <b>${currentNumber}</b> została opanowana!`;
+                    feedbackMessage.className = "min-h-[56px] flex items-center justify-center rounded-2xl p-3 font-bold text-center text-lg bg-emerald-100 text-emerald-800 border-2 border-emerald-300 pop-in";
+                    confetti({ particleCount: 60, spread: 50, origin: { y: 0.7 } });
+                } else {
+                    feedbackMessage.textContent = "Dobrze! 👏 Zgadnij jeszcze raz bez błędu, by ją opanować.";
+                    feedbackMessage.className = "min-h-[56px] flex items-center justify-center rounded-2xl p-3 font-bold text-center text-lg bg-emerald-100 text-emerald-800 border-2 border-emerald-300 pop-in";
+                }
+
+                if (streak % 5 === 0 && !isMasteredNow) {
+                    confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+                }
+
+                speakCurrentNumber();
+            } else {
+                // ZŁA ODPOWIEDŹ
+                // Waga staje się 3 razy większa niż średnia
+                numberStats[currentNumber].weight = Math.min(100.0, avgWeight * 3);
+
+                streak = 0;
+                totalWrong++;
+
+                feedbackMessage.innerHTML = `Źle! Poprawna odpowiedź to: <span class="underline ml-1 font-extrabold">${currentWord}</span>`;
+                feedbackMessage.className = "min-h-[56px] flex items-center justify-center rounded-2xl p-3 font-bold text-center text-lg bg-rose-100 text-rose-800 border-2 border-rose-300 shake";
+            }
+
+            updateStats();
+
+            submitBtn.innerHTML = 'Dalej (Enter) <i class="fa-solid fa-forward"></i>';
+            submitBtn.className = 'w-full py-4 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xl rounded-2xl transition shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center gap-2';
+            submitBtn.focus();
+        }
+
+        function speakCurrentNumber() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(currentWord);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+
+                const voices = window.speechSynthesis.getVoices();
+                const enVoice = voices.find(v => v.lang.includes('en'));
+                if (enVoice) utterance.voice = enVoice;
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function updateStats() {
+            scoreDisplay.textContent = score;
+            streakDisplay.textContent = streak;
+            correctCountDisplay.textContent = totalCorrect;
+            wrongCountDisplay.textContent = totalWrong;
+            totalCountDisplay.textContent = totalCorrect + totalWrong;
+
+            const { masteredCount, totalInRange } = getRangeStats();
+            masteredDisplay.textContent = `${masteredCount} / ${totalInRange}`;
+        }
+
+        window.onload = function() {
+            setRangeMode('0-20');
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    window.speechSynthesis.getVoices();
+                };
+            }
+        };
+    </script>
+</body>
+</html>
